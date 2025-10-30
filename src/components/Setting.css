@@ -1,0 +1,124 @@
+/* ===== Settings Page UI Improvements ===== */
+
+.settings-container-center {
+  color: #fff;
+  padding: 40px;
+  background-color: #1c2a2f;
+  border-radius: 16px;
+  max-width: 800px;
+  margin: 40px auto;
+  box-shadow: 0 4px 25px rgba(0, 0, 0, 0.4);
+  line-height: 1.6;
+}
+
+.settings-container-center h2 {
+  color: #f8c400;
+  margin-bottom: 10px;
+  font-size: 26px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-container-center p {
+  color: #cbd5e1;
+  font-size: 15px;
+  margin-bottom: 25px;
+}
+
+/* Section titles */
+.general-section h3 {
+  color: #f8c400;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #2a3b40;
+  padding-bottom: 5px;
+}
+
+/* Label and inputs */
+.general-section label {
+  display: block;
+  margin: 12px 0;
+  font-weight: 500;
+}
+
+.general-section input,
+.general-section textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #2a3b40;
+  background-color: #24353a;
+  color: white;
+  font-size: 14px;
+  margin-top: 6px;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.general-section input:focus,
+.general-section textarea:focus {
+  border-color: #f8c400;
+  background-color: #2f4249;
+  outline: none;
+}
+
+/* Responsive layout for form groups */
+.general-section {
+  margin-bottom: 30px;
+}
+
+.general-section label {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Button styles */
+.general-section button {
+  background-color: #f8c400;
+  color: #000;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.general-section button:hover {
+  background-color: #e0b800;
+}
+
+/* Back button */
+.close-settings-btn {
+  display: inline-block;
+  margin-top: 25px;
+  background: transparent;
+  border: 1px solid #f8c400;
+  padding: 10px 20px;
+  border-radius: 8px;
+  color: #f8c400;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+}
+
+.close-settings-btn:hover {
+  background-color: #f8c400;
+  color: #000;
+}
+
+/* Form responsive layout */
+@media (min-width: 700px) {
+  .general-section label {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .general-section label input,
+  .general-section label textarea {
+    margin-left: 15px;
+    flex: 1;
+  }
+}

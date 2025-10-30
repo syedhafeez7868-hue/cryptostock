@@ -1,0 +1,158 @@
+.markets-content {
+  background-color: #0f181b;
+  color: #fff;
+  padding: 22px;
+  border-radius: 12px;
+}
+
+/* header */
+.markets-header h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #f8c400;
+}
+.markets-header p {
+  margin: 6px 0 16px 0;
+  color: #bfc9cc;
+}
+
+/* card */
+.markets-table-card {
+  background-color: #1c2a2f;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+/* table head */
+.markets-table-head {
+  display: grid;
+  grid-template-columns: 2fr 1fr 0.8fr 1.2fr 2fr 0.8fr;
+  padding: 10px 12px;
+  color: #9fb0b3;
+  font-size: 13px;
+  border-bottom: 1px solid #263238;
+}
+
+/* rows */
+.markets-table-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.markets-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 0.8fr 1.2fr 2fr 0.8fr;
+  align-items: center;
+  padding: 12px;
+  border-radius: 8px;
+  transition: background 0.12s ease;
+}
+
+.markets-row:hover {
+  background: rgba(248, 196, 0, 0.03);
+}
+
+/* coin col */
+.coin-col {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.coin-icon {
+  width: 40px;
+  height: 40px;
+  background: #263238;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #f8c400;
+  font-size: 18px;
+}
+
+.coin-meta .coin-name {
+  font-weight: 600;
+  color: #fff;
+}
+.coin-meta .coin-symbol {
+  font-size: 12px;
+  color: #9fb0b3;
+}
+
+/* columns */
+.price-col, .change-col, .mcap-col, .spark-col, .action-col {
+  font-size: 14px;
+  color: #fff;
+}
+
+.price-col { color: #fff; }
+.mcap-col { color: #9fb0b3; }
+
+/* positive/negative */
+.green { color: #10b981; }
+.red { color: #ef4444; }
+
+/* sparkline area */
+.spark-col {
+  width: 100%;
+  height: 40px;
+}
+
+/* button */
+.trade-btn {
+  background: #f8c400;
+  color: #0f181b;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.trade-btn:hover {
+  opacity: 0.95;
+}
+
+/* responsive tweaks */
+@media (max-width: 900px) {
+  .markets-table-head, .markets-row {
+    grid-template-columns: 1fr 1fr 0.8fr 1fr;
+    grid-auto-flow: row;
+    gap: 8px;
+  }
+  .spark-col { display: none; }
+  .action-col { justify-self: end; }
+}
+/* Market Detail Enhancements */
+.markets-content h2 {
+  font-size: 24px;
+  color: #f8c400;
+  margin-bottom: 8px;
+}
+
+.markets-content p {
+  color: #9fb0b3;
+  font-size: 14px;
+}
+
+.chart-card h3 {
+  color: #f8c400;
+  margin-bottom: 10px;
+}
+
+.trade-btn {
+  background: #f8c400;
+  color: #0f181b;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.trade-btn:hover {
+  opacity: 0.9;
+}

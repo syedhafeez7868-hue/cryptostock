@@ -1,0 +1,73 @@
+/* Full page background */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f1c2c, #1f2a48);
+  font-family: "Arial", sans-serif;
+}
+
+/* Box styling */
+.auth-box {
+  background: rgb(221, 222, 236);
+  padding: 40px;
+  border-radius: 15px;
+  width: 380px;
+  text-align: center;
+  box-shadow: 0 0 25px rgba(0,0,0,0.4);
+  transition: all 0.3s ease-in-out;
+}
+
+/* Header */
+.auth-header {
+  font-size: 28px;
+  color: #007bff;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+/* Form inputs */
+.auth-box input {
+  width: 90%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: 1px solid #e6ebe8;
+  font-size: 14px;
+}
+
+/* Buttons */
+.auth-box button {
+  width: 95%;
+  padding: 12px;
+  margin-top: 15px;
+  border: none;
+  border-radius: 8px;
+  background-color: #c7efbf;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.auth-box button:hover {
+  background-color: #0056b3;
+}
+
+/* Links */
+.auth-links {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+}
+
+.auth-links span {
+  color: #007bff;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.auth-links span:hover {
+  text-decoration: underline;
+}

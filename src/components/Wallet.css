@@ -1,0 +1,107 @@
+/* ----- Wallet Page Styles ----- */
+
+.wallet-container {
+  color: #fff;
+  padding: 25px;
+}
+
+/* Wallet Heading */
+.wallet-container h2 {
+  color: #f8c400;
+  font-size: 26px;
+  margin-bottom: 5px;
+}
+
+.wallet-container p {
+  color: #cbd5e1;
+  margin-bottom: 25px;
+}
+
+/* Summary Cards */
+.wallet-summary {
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.wallet-card {
+  background-color: #1c2a2f;
+  padding: 20px;
+  border-radius: 12px;
+  width: 220px;
+  text-align: center;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease, background 0.3s ease;
+}
+
+.wallet-card:hover {
+  transform: translateY(-4px);
+  background-color: #24373d;
+}
+
+.wallet-card h3 {
+  color: #f8c400;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.wallet-card p {
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+}
+
+/* Transactions Table */
+.wallet-transactions {
+  background-color: #1c2a2f;
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 30px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+.wallet-transactions h3 {
+  color: #f8c400;
+  margin-bottom: 15px;
+  font-size: 18px;
+}
+
+.wallet-transactions table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.wallet-transactions th,
+.wallet-transactions td {
+  padding: 12px 10px;
+  border-bottom: 1px solid #2a3b40;
+  text-align: left;
+  font-size: 14px;
+}
+
+.wallet-transactions th {
+  color: #f8c400;
+  font-weight: 600;
+}
+
+.wallet-transactions td {
+  color: #e5e7eb;
+}
+
+/* Status colors */
+.status-completed {
+  color: #22c55e;
+  font-weight: bold;
+}
+
+.status-pending {
+  color: #facc15;
+  font-weight: bold;
+}
+
+.status-failed {
+  color: #ef4444;
+  font-weight: bold;
+}

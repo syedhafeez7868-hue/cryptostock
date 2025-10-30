@@ -1,0 +1,160 @@
+.overview-content {
+  background-color: #0f181b;
+  color: white;
+  padding: 25px;
+  border-radius: 12px;
+}
+
+/* Summary Cards */
+.cards-container {
+  display: flex;
+  justify-content: space-around;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.summary-card {
+  background-color: #1c2a2f;
+  padding: 20px;
+  border-radius: 12px;
+  width: 200px;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.summary-card h3 {
+  color: #f8c400;
+  margin-bottom: 8px;
+}
+
+.summary-card p {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* Charts */
+.charts-section {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 30px;
+}
+
+.chart-card {
+  background-color: #1c2a2f;
+  border-radius: 12px;
+  padding: 20px;
+  flex: 1;
+  min-width: 300px;
+}
+
+/* Transactions */
+.transactions-card {
+  background-color: #1c2a2f;
+  border-radius: 12px;
+  margin-top: 30px;
+  padding: 20px;
+}
+
+.transactions-card table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.transactions-card th,
+.transactions-card td {
+  padding: 10px;
+  border-bottom: 1px solid #2a3b40;
+  text-align: left;
+}
+
+.transactions-card th {
+  color: #f8c400;
+}
+
+.transactions-card td {
+  color: #fff;
+}
+.overview-content {
+  background-color: #0f181b;
+  color: white;
+  padding: 25px;
+  border-radius: 12px;
+}
+
+/* Summary Cards */
+.cards-container {
+  display: flex;
+  justify-content: space-around;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.summary-card {
+  background-color: #1c2a2f;
+  padding: 20px;
+  border-radius: 12px;
+  width: 200px;
+  text-align: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.summary-card h3 {
+  color: #f8c400;
+  margin-bottom: 8px;
+}
+
+.summary-card p {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* Charts */
+.charts-section {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 30px;
+}
+
+.chart-card {
+  background-color: #1c2a2f;
+  border-radius: 12px;
+  padding: 20px;
+  flex: 1;
+  min-width: 300px;
+}
+
+/* Transactions */
+.transactions-card {
+  background-color: #1c2a2f;
+  border-radius: 12px;
+  margin-top: 30px;
+  padding: 20px;
+}
+
+.transactions-card table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.transactions-card th,
+.transactions-card td {
+  padding: 10px;
+  border-bottom: 1px solid #2a3b40;
+  text-align: left;
+}
+
+.transactions-card th {
+  color: #f8c400;
+}
+
+.transactions-card td {
+  color: #fff;
+}
