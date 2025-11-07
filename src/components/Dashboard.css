@@ -1,73 +1,318 @@
-/* ----- Dashboard Enhancement Styles ----- */
-.cards-container {
+.dashboard-container {
   display: flex;
-  justify-content: space-around;
-  gap: 20px;
-  flex-wrap: wrap;
-  margin-top: 20px;
+  height: 100vh;
+  background-color: #0b0e11;
+  color: #fff;
+  overflow: hidden;
+  font-family: "Poppins", sans-serif;
 }
 
-.summary-card {
-  background-color: #1c2a2f;
-  padding: 20px;
-  border-radius: 12px;
-  width: 200px;
-  text-align: center;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-}
-
-.summary-card h3 {
+/* Sidebar Logo */
+.logo {
   color: #f8c400;
-  margin-bottom: 8px;
+  font-weight: 700;
+  transition: all 0.3s ease;
+  white-space: nowrap;
 }
 
-.summary-card p {
+.logo.expanded {
+  font-size: 20px;
+}
+
+.collapsed-logo {
   font-size: 18px;
-  font-weight: 600;
-  color: #fff;
+  text-align: center;
+  letter-spacing: 1px;
 }
 
-/* Charts */
-.charts-section {
+/* Sidebar collapse */
+.sidebar {
+  width: 240px;
+  background-color: #11161c;
+  padding: 20px;
   display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  box-shadow: 3px 0 8px rgba(0, 0, 0, 0.4);
+  transition: width 0.4s ease;
+}
+
+.sidebar.collapsed {
+  width: 70px;
+}
+
+/* Toggle button */
+.toggle-btn {
+  background: none;
+  border: none;
+  color: #f8c400;
+  font-size: 22px;
+  cursor: pointer;
+  padding: 4px 6px;
+  transition: transform 0.3s;
+}
+
+.toggle-btn:hover {
+  transform: rotate(90deg);
+}
+
+/* Floating open button */
+.sidebar-floating-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background-color: #f8c400;
+  color: #0b0e11;
+  border: none;
+  font-size: 24px;
+  font-weight: bold;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  z-index: 20;
+  transition: all 0.3s ease;
+}
+
+.sidebar-floating-btn:hover {
+  background-color: #ffdb4d;
+  transform: scale(1.05);
+}
+
+
+/* Sidebar Menu */
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
   margin-top: 30px;
 }
 
-.chart-card {
-  background-color: #1c2a2f;
-  border-radius: 12px;
-  padding: 20px;
-  flex: 1;
-  min-width: 300px;
+.sidebar-menu li {
+  padding: 12px 14px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  color: #d1d5db;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
 }
 
-/* Transactions */
-.transactions-card {
-  background-color: #1c2a2f;
-  border-radius: 12px;
-  margin-top: 30px;
-  padding: 20px;
-}
-
-.transactions-card table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 10px;
-}
-
-.transactions-card th,
-.transactions-card td {
-  padding: 10px;
-  border-bottom: 1px solid #2a3b40;
-  text-align: left;
-}
-
-.transactions-card th {
+.sidebar-menu li:hover {
+  background-color: #1f2937;
   color: #f8c400;
 }
 
-.transactions-card td {
+.sidebar-menu li.active {
+  background-color: #f8c400;
+  color: #0b0e11;
+  font-weight: 600;
+}
+
+/* ===============================
+   FLOATING OPEN BUTTON
+================================= */
+.sidebar-floating-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background-color: #f8c400;
+  color: #0b0e11;
+  border: none;
+  font-size: 24px;
+  font-weight: bold;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  z-index: 20;
+  transition: all 0.3s ease;
+}
+
+.sidebar-floating-btn:hover {
+  background-color: #ffdb4d;
+  transform: scale(1.05);
+}
+
+/* ===============================
+   MAIN SECTION
+================================= */
+.main-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #0f181b;
+  overflow-y: auto;
+}
+
+/* ===============================
+   TOP NAVBAR
+================================= */
+.top-navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #1a2226;
+  /* padding: 14px 25px; */
+  height: 70px; /* reduce from 70px or 80px */
+  padding: 0 20px;
+  border-bottom: 1px solid #2d3a3f;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+
+
+/* Search Box */
+.search-box {
+  display: flex;
+  align-items: center;
+  background-color: #1e2a30;
+  padding: 6px 10px;
+  border-radius: 10px;
+  width: 320px;
+}
+
+.search-box input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
   color: #fff;
+  font-size: 14px;
+}
+
+.search-box button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #f8c400;
+  font-size: 18px;
+  margin-left: 6px;
+}
+
+/* ===============================
+   PROFILE / DROPDOWN (Improved)
+================================= */
+
+.user-profile {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 100%; /* centers inside navbar */
+}
+
+/* Main profile info card */
+.user-info {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  background-color: #1e2a30;
+  padding: 8px 12px; /* balanced spacing */
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  height: 46px; /* ensures perfect vertical alignment inside 70px navbar */
+}
+
+.user-info:hover {
+  background-color: #2a3740;
+  transform: translateY(-1px);
+}
+
+/* Profile image (avatar) */
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #f8c400;
+  flex-shrink: 0;
+}
+
+/* Profile text (name + email) */
+.user-info .user-details {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  color: #fff;
+}
+
+.user-info .user-details span:first-child {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.user-info .user-details span:last-child {
+  color: #aaa;
+  font-size: 0.82rem;
+}
+
+/* Dropdown menu */
+.dropdown-menu {
+  position: absolute;
+  top: 58px; /* now aligns just below navbar */
+  right: 0;
+  background-color: #1e2a30;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+  min-width: 160px;
+  z-index: 100;
+  overflow: hidden;
+  animation: dropdownFade 0.25s ease-out;
+}
+
+/* Dropdown fade animation */
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dropdown buttons */
+.dropdown-menu button {
+  background: none;
+  border: none;
+  color: #fff;
+  text-align: left;
+  padding: 10px 18px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dropdown-menu button:hover {
+  background-color: #f8c400;
+  color: #0b0e11;
+  font-weight: 600;
+}
+
+
+/* ===============================
+   CONTENT AREA
+================================= */
+.content-display {
+  padding: 30px 40px;
+  flex: 1;
+  background-color: #0f181b;
+  overflow-y: auto;
+}
+
+/* ===============================
+   MORE PAGE
+================================= */
+.more-page {
+  text-align: center;
+  padding: 50px;
+  font-size: 22px;
+  color: #f8c400;
 }

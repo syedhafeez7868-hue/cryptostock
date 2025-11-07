@@ -7,6 +7,7 @@ export default function Trade() {
   const [selectedCoin, setSelectedCoin] = useState("");
   const [quantity, setQuantity] = useState(0);
   const [tradeHistory, setTradeHistory] = useState([]);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   useEffect(() => {
     fetchCoins();
@@ -17,16 +18,25 @@ export default function Trade() {
   const fetchCoins = async () => {
     try {
       const res = await axios.get(
-        "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1"
-      );
+             "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=true&price_change_percentage=24h"
+           );
+
       setCoins(res.data);
+      setLastUpdated(
+        new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        })
+      );
     } catch (error) {
       console.error("Error fetching coins:", error);
     }
   };
 
   const handleTrade = () => {
-    if (!selectedCoin || quantity <= 0) return alert("Select a coin and enter quantity.");
+    if (!selectedCoin || quantity <= 0)
+      return alert("Select a coin and enter quantity.");
 
     const coin = coins.find((c) => c.id === selectedCoin);
     const newTrade = {
@@ -44,12 +54,30 @@ export default function Trade() {
     setTradeHistory(updatedHistory);
     localStorage.setItem("tradeHistory", JSON.stringify(updatedHistory));
     alert("✅ Trade executed successfully!");
+    setQuantity(0);
   };
 
   return (
     <div className="trade-content">
-      <h2>Trade</h2>
-      <p>Buy or Sell Crypto (mock execution)</p>
+      <h2>💱 Trade</h2>
+      <p>Buy or Sell Crypto (mock execution + live prices)</p>
+
+      <div className="cards-container">
+        <div className="summary-card">
+          <h3>Total Trades</h3>
+          <p>{tradeHistory.length}</p>
+        </div>
+        <div className="summary-card">
+          <h3>Available Coins</h3>
+          <p>{coins.length}</p>
+        </div>
+      </div>
+
+      {lastUpdated && (
+        <p className="last-updated">
+          ⏱️ Last Updated: <span>{lastUpdated}</span>
+        </p>
+      )}
 
       <div className="trade-summary">
         <div className="trade-card">
@@ -57,6 +85,14 @@ export default function Trade() {
           <select
             onChange={(e) => setSelectedCoin(e.target.value)}
             value={selectedCoin}
+            style={{
+              background: "#243238",
+              color: "white",
+              padding: "10px",
+              borderRadius: "8px",
+              border: "1px solid #2a3b40",
+              width: "100%",
+            }}
           >
             <option value="">-- Select Coin --</option>
             {coins.map((coin) => (
@@ -79,14 +115,19 @@ export default function Trade() {
               color: "white",
               padding: "10px",
               borderRadius: "8px",
-              border: "none",
+              border: "1px solid #2a3b40",
+              width: "100%",
             }}
           />
         </div>
 
         <div className="trade-card">
           <h3>Action</h3>
-          <button onClick={handleTrade} style={{ padding: "10px 20px" }}>
+          <button
+            onClick={handleTrade}
+            className="settings-btn"
+            style={{ padding: "10px 20px" }}
+          >
             Execute Trade
           </button>
         </div>

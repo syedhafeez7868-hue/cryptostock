@@ -1,283 +1,315 @@
-body {
-  margin: 0;
-  padding: 0;
-  font-family: "Poppins", sans-serif;
+/* === DASHBOARD STYLE LANDING PAGE === */
+
+.landing-dashboard {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
   background-color: #0b0e11;
   color: white;
 }
 
-.landing-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* 🧭 Navbar */
-.navbar {
-  width: 100%;
+/* 🔝 Top Navbar */
+.topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 50px;
-  background-color: #1c2b30;
-  border-bottom: 1px solid #243238;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  background-color: #11191f;
+  padding: 12px 30px;
+  border-bottom: 1px solid #1f2a33;
 }
 
-/* ✅ Logo */
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.search-area {
+  position: relative;
 }
 
-.logo-icon {
-  background: #fcd535;
-  color: #0b0e11;
-  font-weight: 800;
-  font-size: 1.2rem;
-  padding: 6px 10px;
-  border-radius: 6px;
-}
-
-.logo-text {
-  color: #fcd535;
-  font-weight: 700;
-  font-size: 1.4rem;
-}
-
-/* ✅ Center Nav Links */
-.nav-links {
-  list-style: none;
-  display: flex;
-  gap: 25px;
-}
-
-.nav-btn {
-  background: none;
+.search-area input {
+  background-color: #1f2a33;
   border: none;
-  color: #ffffffcc;
-  font-weight: 500;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: color 0.3s ease;
-}
-
-.nav-btn:hover {
-  color: #fcd535;
-}
-
-/* ✅ Right Section */
-.nav-right {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-/* Small icons: Portfolio, Watchlist */
-.nav-icons {
-  display: flex;
-  gap: 15px;
-  align-items: center;
-}
-
-.icon-item {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 0.9rem;
-  color: #ffffffcc;
-  cursor: pointer;
-}
-
-.icon-item:hover {
-  color: #fcd535;
-}
-
-.icon {
-  font-size: 1rem;
-}
-
-/* Search box */
-.search-box {
-  display: flex;
-  align-items: center;
-  background-color: #243238;
   border-radius: 10px;
-  padding: 5px 10px;
-}
-
-.search-box input {
-  background: none;
-  border: none;
-  outline: none;
+  padding: 10px 35px 10px 15px;
   color: white;
-  width: 120px;
-  padding: 5px;
+  width: 240px;
+  outline: none;
 }
 
 .search-icon {
-  color: #bbb;
-  margin-right: 6px;
+  position: absolute;
+  right: 12px;
+  top: 10px;
+  color: #fcd535;
 }
 
-/* Auth Buttons */
-.nav-auth {
+.topbar-actions {
   display: flex;
+  align-items: center;
   gap: 10px;
 }
 
-.login-btn {
-  background: none;
-  color: white;
-  border: 1px solid #fcd535;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-}
-
+.settings-btn,
+.logout-btn,
 .signup-btn {
-  background: #fcd535;
+  background-color: #fcd535;
   color: #0b0e11;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  cursor: pointer;
+  padding: 8px 15px;
+  border-radius: 8px;
   font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.logout-btn {
+  background-color: #fcd535;
+}
+
+.settings-btn {
+  background-color: #fcd535;
 }
 
 .signup-btn:hover {
   opacity: 0.9;
 }
 
-/* 🏠 Hero Section */
-.hero-section {
+/* 📊 Layout */
+.main-layout {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding: 80px 120px;
-  width: 100%;
+  flex: 1;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  background-color: #0e1418;
+  padding: 25px;
+}
+
+.brand-name {
+  color: #fcd535;
+  margin-bottom: 25px;
+  font-size: 1.2rem;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+}
+
+.sidebar li {
+  padding: 10px 0;
+  cursor: pointer;
+  color: #ddd;
+  border-radius: 6px;
+}
+
+.sidebar li.active,
+.sidebar li:hover {
+  background-color: #fcd535;
+  color: #0b0e11;
+  font-weight: 600;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  padding: 40px;
+  background-color: #11191f;
+  border-left: 1px solid #1f2a33;
+}
+
+.section-title {
+  color: #fcd535;
+  font-size: 1.6rem;
+}
+
+.subtext {
+  color: #aaa;
+  margin-bottom: 30px;
+}
+
+.stats {
+  display: flex;
+  gap: 25px;
   flex-wrap: wrap;
 }
 
-/* Left side */
-.hero-left {
-  max-width: 600px;
-}
-
-.hero-left h1 {
-  font-size: 3.5rem;
-  font-weight: 700;
-  margin-bottom: 20px;
-}
-
-.hero-left h1 span {
-  color: #fcd535;
-  font-size: 4rem;
-}
-
-/* Badges */
-.badges {
-  display: flex;
-  gap: 40px;
-  margin-top: 20px;
-}
-
-.badge-title {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #fcd535;
-}
-
-/* CTA */
-.cta-section {
-  margin-top: 40px;
-  display: flex;
-  gap: 15px;
-}
-
-.bonus-btn {
-  background: #1f2937;
-  color: white;
-  padding: 12px 20px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  font-weight: 500;
-}
-
-/* Icons */
-.icons {
-  display: flex;
-  gap: 15px;
-  margin-top: 25px;
-}
-
-.icon-btn {
-  background: #1f2937;
-  border: none;
-  padding: 12px;
-  border-radius: 50%;
-  color: white;
-  cursor: pointer;
-}
-
-/* Right side */
-.hero-right {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  width: 350px;
-}
-
-.card {
-  border-bottom: 1px solid #242e38;
+.stat-card {
+  flex: 1;
+  background-color: #1c262e;
   border-radius: 10px;
   padding: 20px;
+  text-align: center;
+  min-width: 180px;
 }
 
-.card h3 {
+.stat-card h4 {
   color: #fcd535;
   margin-bottom: 10px;
 }
 
-.card ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+/* Coin Grid */
+.coin-section {
+  margin-top: 40px;
 }
 
-.card ul li {
+.coin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.coin-card {
+  background-color: #1c262e;
+  padding: 15px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.coin-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.coin-price {
+  color: #fff;
+  font-weight: 600;
+}
+
+.open-btn {
+  background-color: #fcd535;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #0b0e11;
+}
+
+/* Topbar Layout Fix */
+.topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 6px 0;
+  background-color: #11191f;
+  padding: 15px 30px;
+  border-bottom: 1px solid #1f2a33;
+}
+
+.top-left {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-top {
+  color: #fcd535;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Market Table */
+.market-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
   font-size: 0.95rem;
 }
 
-.green {
-  color: #10b981;
+.market-table th,
+.market-table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid #243238;
 }
 
-/* Responsive */
-@media (max-width: 992px) {
-  .hero-section {
-    flex-direction: column;
-    align-items: center;
-    padding: 60px 20px;
-  }
+.market-table th {
+  color: #fcd535;
+  font-weight: 600;
+}
 
-  .hero-right {
-    width: 100%;
-    margin-top: 40px;
-  }
+.market-table tr:hover {
+  background-color: #1c262e;
+}
 
-  .navbar {
-    flex-wrap: wrap;
-    justify-content: center;
-    padding: 15px;
-  }
+.markets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.market-card {
+  background-color: #1c2a2f;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  color: #fff;
+  transition: transform 0.2s ease-in-out;
+}
+
+.market-card:hover {
+  transform: scale(1.03);
+}
+
+.market-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.market-info {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.market-graph {
+  margin-top: 10px;
+}
+
+.trade-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  justify-content: center;
+}
+.coin-card {
+  transition: all 0.3s ease-in-out;
+}
+
+.coin-card.expanded {
+  background-color: #1c2a2f;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+  transform: scale(1.02);
+  padding-bottom: 15px;
+}
+
+.expanded-section {
+  margin-top: 10px;
+  border-top: 1px solid #2a3b40;
+  padding-top: 10px;
+}
+
+.trade-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.market-graph {
+  margin-top: 8px;
 }

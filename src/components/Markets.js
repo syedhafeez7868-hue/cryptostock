@@ -1,3 +1,4 @@
+// src/components/Markets.js
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { LineChart, Line, ResponsiveContainer } from "recharts";
@@ -9,9 +10,12 @@ export default function Markets() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const navigate = useNavigate();
+  
 
   useEffect(() => {
     fetchMarketData();
+    const iv = setInterval(fetchMarketData, 30000);
+    return () => clearInterval(iv);
   }, []);
 
   const fetchMarketData = async () => {
@@ -19,7 +23,7 @@ export default function Markets() {
       const res = await axios.get(
         "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=true&price_change_percentage=24h"
       );
-      setCoins(res.data);
+      setCoins(res.data || []);
     } catch (error) {
       console.error("Error fetching markets:", error);
     } finally {
@@ -78,13 +82,7 @@ export default function Markets() {
               >
                 <div className="coin-col">
                   <div className="coin-icon">
-                    <img
-                      src={coin.image}
-                      alt={coin.id}
-                      width="30"
-                      height="30"
-                      style={{ borderRadius: "6px" }}
-                    />
+                    <img src={coin.image} alt={coin.id} width="30" height="30" style={{ borderRadius: "6px" }} />
                   </div>
                   <div className="coin-meta">
                     <div className="coin-name">{coin.name}</div>
@@ -92,37 +90,18 @@ export default function Markets() {
                   </div>
                 </div>
 
-                <div className="price-col">${coin.current_price.toLocaleString()}</div>
+                <div className="price-col">${coin.current_price?.toLocaleString()}</div>
 
-                <div
-                  className={`change-col ${
-                    coin.price_change_percentage_24h >= 0 ? "green" : "red"
-                  }`}
-                >
+                <div className={`change-col ${coin.price_change_percentage_24h >= 0 ? "green" : "red"}`}>
                   {coin.price_change_percentage_24h?.toFixed(2)}%
                 </div>
 
-                <div className="mcap-col">${coin.market_cap.toLocaleString()}</div>
+                <div className="mcap-col">${coin.market_cap?.toLocaleString()}</div>
 
                 <div className="spark-col">
                   <ResponsiveContainer width="100%" height={40}>
-                    <LineChart
-                      data={coin.sparkline_in_7d.price.map((p, i) => ({
-                        index: i,
-                        price: p,
-                      }))}
-                    >
-                      <Line
-                        type="monotone"
-                        dataKey="price"
-                        stroke={
-                          coin.price_change_percentage_24h >= 0
-                            ? "#10b981"
-                            : "#ef4444"
-                        }
-                        strokeWidth={2}
-                        dot={false}
-                      />
+                    <LineChart data={(coin.sparkline_in_7d?.price || []).map((p, i) => ({ index: i, price: p }))}>
+                      <Line type="monotone" dataKey="price" stroke={coin.price_change_percentage_24h >= 0 ? "#10b981" : "#ef4444"} strokeWidth={2} dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>

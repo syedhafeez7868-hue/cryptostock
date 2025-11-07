@@ -105,3 +105,15 @@
   color: #ef4444;
   font-weight: bold;
 }
+/* Additions */
+.loading-text {
+  color: #aaa;
+  text-align: center;
+  margin-top: 20px;
+}
+
+.error-text {
+  color: #ef4444;
+  text-align: center;
+  margin-top: 20px;
+}

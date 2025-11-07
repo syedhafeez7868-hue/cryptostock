@@ -1,171 +1,117 @@
+// src/components/MarketDetail.js
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import axios from "axios";
-import {
-  LineChart,
-  Line,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import "./Markets.css"; 
+import { LineChart, Line, ResponsiveContainer } from "recharts";
+import { backend } from "./api";
+import "./Markets.css";
+
+function getUserEmail() {
+  try {
+    const u = JSON.parse(localStorage.getItem("user"));
+    return u?.email || "guest@example.com";
+  } catch {
+    return "guest@example.com";
+  }
+}
 
 export default function MarketDetail() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [coin, setCoin] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [qty, setQty] = useState("");
+  const [mode, setMode] = useState(null);
+  const userEmail = getUserEmail();
 
   useEffect(() => {
-    fetchCoinDetails();
-    // eslint-disable-next-line
+    fetchCoin();
   }, [id]);
 
-  const fetchCoinDetails = async () => {
+  const fetchCoin = async () => {
     try {
-      const res = await axios.get(
-        `https://api.coingecko.com/api/v3/coins/${id}?localization=false&sparkline=true`
-      );
+      const res = await axios.get(`https://api.coingecko.com/api/v3/coins/${id}?localization=false&sparkline=true`);
       setCoin(res.data);
     } catch (err) {
-      console.error("Error fetching coin details:", err);
-    } finally {
-      setLoading(false);
+      console.error(err);
     }
   };
 
-  if (loading) return <div className="markets-content">Loading coin data...</div>;
-  if (!coin) return <div className="markets-content">Coin not found.</div>;
+  const doTrade = async (type) => {
+    if (!qty || Number(qty) <= 0) return alert("enter qty");
+    const price = coin?.market_data?.current_price?.usd;
+    const total = price * Number(qty);
 
-  const marketData = coin.market_data;
-  const prices =
-    coin.market_data.sparkline_7d.price.map((price, i) => ({
-      index: i,
+    const tradePayload = {
+      email: userEmail,
+      coinId: coin.id,
+      coinName: coin.name,
+      type,
+      quantity: Number(qty),
       price,
-    })) || [];
+      total,
+      status: "Completed",
+      date: new Date().toLocaleString(),
+    };
+
+    try {
+      await backend.post("/trades", tradePayload);
+      await backend.post("/portfolio/update", tradePayload);
+
+      const walletRes = await backend.get(`/wallet/${userEmail}`);
+      let balance = walletRes.data.balanceUsd || 0;
+      if (type === "BUY") balance -= total; else balance += total;
+      await backend.post("/wallet/update", { email: userEmail, balanceUsd: balance });
+
+      alert("✅ Trade saved");
+      setQty("");
+      setMode(null);
+    } catch (err) {
+      console.error(err);
+      alert("trade failed");
+    }
+  };
+
+  if (!coin) return <div className="markets-content">Loading...</div>;
+
+  const prices = (coin.market_data?.sparkline_7d?.price || []).map((p, i) => ({ i, price: p }));
 
   return (
     <div className="markets-content">
-      <button
-        onClick={() => navigate(-1)}
-        style={{
-          marginBottom: 15,
-          background: "transparent",
-          border: "1px solid #f8c400",
-          color: "#f8c400",
-          padding: "8px 16px",
-          borderRadius: "8px",
-          cursor: "pointer",
-        }}
-      >
-        ← Back
-      </button>
+      <button onClick={() => window.history.back()} className="close-settings-btn">← Back</button>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 15 }}>
-        <img
-          src={coin.image.large}
-          alt={coin.name}
-          width="60"
-          height="60"
-          style={{ borderRadius: "10px" }}
-        />
+      <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+        <img src={coin.image?.large} alt={coin.name} width="60" height="60" />
         <div>
-          <h2 style={{ color: "#f8c400" }}>
-            {coin.name} ({coin.symbol.toUpperCase()})
-          </h2>
-          <p style={{ color: "#9fb0b3" }}>{coin.asset_platform_id || "Crypto"}</p>
+          <h2 style={{ color: "#f8c400" }}>{coin.name} ({coin.symbol?.toUpperCase()})</h2>
+          <p style={{ color: "#9fb0b3" }}>{coin.market_data?.current_price?.usd ? `$${coin.market_data.current_price.usd.toLocaleString()}` : ""}</p>
         </div>
       </div>
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-          gap: "20px",
-          marginTop: "25px",
-        }}
-      >
-        <div className="summary-card">
-          <h3>Current Price</h3>
-          <p>${marketData.current_price.usd.toLocaleString()}</p>
-        </div>
-        <div className="summary-card">
-          <h3>Market Cap</h3>
-          <p>${marketData.market_cap.usd.toLocaleString()}</p>
-        </div>
-        <div className="summary-card">
-          <h3>24h Change</h3>
-          <p
-            style={{
-              color:
-                marketData.price_change_percentage_24h >= 0
-                  ? "#10b981"
-                  : "#ef4444",
-            }}
-          >
-            {marketData.price_change_percentage_24h.toFixed(2)}%
-          </p>
-        </div>
-        <div className="summary-card">
-          <h3>Rank</h3>
-          <p>#{coin.market_cap_rank}</p>
-        </div>
-      </div>
-
-      <div className="chart-card" style={{ marginTop: 30 }}>
-        <h3>7-Day Price Trend</h3>
+      <div className="chart-card" style={{ marginTop: 20 }}>
+        <h3>7-Day Price</h3>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={prices}>
-            <XAxis dataKey="index" hide />
-            <YAxis hide domain={["dataMin", "dataMax"]} />
-            <Tooltip
-              contentStyle={{
-                background: "#1c2a2f",
-                border: "none",
-                borderRadius: "8px",
-                color: "#fff",
-              }}
-              formatter={(value) => [`$${value.toFixed(2)}`, "Price"]}
-            />
-            <Line
-              type="monotone"
-              dataKey="price"
-              stroke={
-                marketData.price_change_percentage_24h >= 0
-                  ? "#10b981"
-                  : "#ef4444"
-              }
-              strokeWidth={2}
-              dot={false}
-            />
+            <Line type="monotone" dataKey="price" stroke={coin.market_data?.price_change_percentage_24h >= 0 ? "#10b981" : "#ef4444"} dot={false} strokeWidth={2} />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
-      <div className="transactions-card" style={{ marginTop: 30 }}>
-        <h3>About {coin.name}</h3>
-        <p
-          style={{
-            color: "#bfc9cc",
-            fontSize: "14px",
-            lineHeight: "1.6em",
-          }}
-          dangerouslySetInnerHTML={{
-            __html:
-              coin.description.en?.substring(0, 500) ||
-              "No description available.",
-          }}
-        ></p>
+      <div style={{ marginTop: 12 }}>
+        <button className="settings-btn" onClick={() => setMode('BUY')}>Buy</button>
+        <button className="logout-btn" onClick={() => setMode('SELL')}>Sell</button>
       </div>
 
-      <button
-        className="trade-btn"
-        style={{ marginTop: 25 }}
-        onClick={() => navigate("/dashboard?tab=trade")}
-      >
-        Buy / Trade {coin.symbol.toUpperCase()}
-      </button>
+      {mode && (
+        <div style={{ marginTop: 12 }}>
+          <input value={qty} onChange={(e) => setQty(e.target.value)} placeholder="Quantity" />
+          <button onClick={() => doTrade(mode)} className="settings-btn">Confirm {mode}</button>
+          <button onClick={() => { setMode(null); setQty(''); }} className="close-settings-btn">Cancel</button>
+        </div>
+      )}
+
+      <div className="transactions-card" style={{ marginTop: 20 }}>
+        <h3>About</h3>
+        <div dangerouslySetInnerHTML={{ __html: coin.description?.en?.substring(0, 500) || "No description" }} />
+      </div>
     </div>
   );
 }

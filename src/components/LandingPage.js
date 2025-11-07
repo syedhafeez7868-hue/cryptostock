@@ -1,150 +1,308 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { FaSearch, FaRegStar, FaChartPie } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
+import { FaSearch, FaCog, FaLock } from "react-icons/fa";
+import { LineChart, Line, ResponsiveContainer } from "recharts";
 import "./LandingPage.css";
 
 export default function LandingPage() {
   const [coins, setCoins] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("Overview");
+  const [expandedCoin, setExpandedCoin] = useState(null);
+  const navigate = useNavigate();
 
-  // 🪙 Fetch live crypto data from CoinGecko API
+  // 🪙 Fetch live crypto data
   useEffect(() => {
-    fetch(
-      "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=5&page=1&sparkline=false"
-    )
-      .then((res) => res.json())
-      .then((data) => {
+    const fetchData = async () => {
+      try {
+        const res = await fetch(
+          "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=true&price_change_percentage=24h"
+        );
+        const data = await res.json();
         setCoins(data);
+      } catch (error) {
+        console.error("Error fetching crypto data:", error);
+      } finally {
         setLoading(false);
-      })
-      .catch((err) => console.error("Error fetching crypto data:", err));
+      }
+    };
+    fetchData();
   }, []);
 
+  // 🔐 Redirect to login for protected tabs
+  const handleProtectedTab = (action) => {
+    alert(`🔒 Please login to ${action} coins.`);
+    navigate("/auth?mode=login");
+  };
+
+  // 🧭 Render Content
+  const renderContent = () => {
+    switch (activeTab) {
+      case "Overview":
+        return (
+          <>
+            <h2 className="section-title">📊 Market Overview</h2>
+            <p className="subtext">Live data of top 20 cryptocurrencies</p>
+
+            {/* Stats Section */}
+            <div className="stats">
+              <div className="stat-card">
+                <h4>Total Market Cap</h4>
+                <p>—</p>
+              </div>
+              <div className="stat-card">
+                <h4>24h Avg Change</h4>
+                <p>—</p>
+              </div>
+              <div className="stat-card">
+                <h4>Total Coins</h4>
+                <p>{coins.length}</p>
+              </div>
+            </div>
+
+            {/* Coin Cards */}
+            <div className="coin-section">
+              <h3>Top 10 Coins — Click to Expand</h3>
+              <div className="coin-grid">
+                {loading ? (
+                  <p>Loading live market data...</p>
+                ) : (
+                  coins.slice(0, 10).map((coin) => (
+                    <div
+                      key={coin.id}
+                      className={`coin-card ${
+                        expandedCoin === coin.id ? "expanded" : ""
+                      }`}
+                    >
+                      <div className="coin-info">
+                        <img
+                          src={coin.image}
+                          alt={coin.name}
+                          width="28"
+                          height="28"
+                        />
+                        <span>
+                          {coin.name} ({coin.symbol.toUpperCase()})
+                        </span>
+                      </div>
+                      <p className="coin-price">
+                        ${coin.current_price.toLocaleString()}
+                      </p>
+                      <button
+                        className="open-btn"
+                        onClick={() =>
+                          setExpandedCoin(
+                            expandedCoin === coin.id ? null : coin.id
+                          )
+                        }
+                      >
+                        {expandedCoin === coin.id ? "Close" : "Open"}
+                      </button>
+
+                      {/* Expanded Graph & Trade Buttons */}
+                      {expandedCoin === coin.id && (
+                        <div className="expanded-section">
+                          <div className="market-graph">
+                            <ResponsiveContainer width="100%" height={150}>
+                              <LineChart
+                                data={coin.sparkline_in_7d.price.map(
+                                  (p, i) => ({
+                                    i,
+                                    price: p,
+                                  })
+                                )}
+                              >
+                                <Line
+                                  type="monotone"
+                                  dataKey="price"
+                                  stroke={
+                                    coin.price_change_percentage_24h >= 0
+                                      ? "#10b981"
+                                      : "#ef4444"
+                                  }
+                                  dot={false}
+                                  strokeWidth={2}
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </div>
+
+                          <div className="trade-actions">
+                            <button
+                              className="settings-btn"
+                              onClick={() => handleProtectedTab("buy")}
+                            >
+                              Buy
+                            </button>
+                            <button
+                              className="logout-btn"
+                              onClick={() => handleProtectedTab("sell")}
+                            >
+                              Sell
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </>
+        );
+
+      case "Markets":
+        return (
+          <div className="markets-section">
+            <h2 className="section-title">📈 Live Markets</h2>
+            <p className="subtext">All top cryptocurrencies and their data</p>
+
+            {loading ? (
+              <p>Loading market data...</p>
+            ) : (
+              <div className="markets-grid">
+                {coins.slice(0, 12).map((coin) => (
+                  <div key={coin.id} className="market-card">
+                    <div className="market-header">
+                      <div className="market-info">
+                        <img
+                          src={coin.image}
+                          alt={coin.name}
+                          width="28"
+                          height="28"
+                        />
+                        <div>
+                          <div className="coin-name">
+                            {coin.name} ({coin.symbol.toUpperCase()})
+                          </div>
+                          <div className="coin-price">
+                            ${coin.current_price.toLocaleString()}
+                          </div>
+                        </div>
+                      </div>
+                      <div
+                        className={
+                          coin.price_change_percentage_24h >= 0
+                            ? "green"
+                            : "red"
+                        }
+                      >
+                        {coin.price_change_percentage_24h?.toFixed(2)}%
+                      </div>
+                    </div>
+
+                    {/* Small Graph */}
+                    <div className="market-graph">
+                      <ResponsiveContainer width="100%" height={60}>
+                        <LineChart
+                          data={coin.sparkline_in_7d.price.map((p, i) => ({
+                            i,
+                            price: p,
+                          }))}
+                        >
+                          <Line
+                            type="monotone"
+                            dataKey="price"
+                            stroke={
+                              coin.price_change_percentage_24h >= 0
+                                ? "#10b981"
+                                : "#ef4444"
+                            }
+                            dot={false}
+                            strokeWidth={2}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    {/* Buy / Sell */}
+                    <div className="trade-actions">
+                      <button
+                        className="settings-btn"
+                        onClick={() => handleProtectedTab("buy")}
+                      >
+                        Buy
+                      </button>
+                      <button
+                        className="logout-btn"
+                        onClick={() => handleProtectedTab("sell")}
+                      >
+                        Sell
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
+      case "Portfolio":
+      case "Trade":
+      case "Wallet":
+        handleProtectedTab(activeTab);
+        return null;
+
+      case "History":
+        return (
+          <h2 className="section-title">
+            📜 "Safe" and "stable" are relative terms in the inherently volatile cryptocurrency space; there are no truly risk-free crypto stocks. Traditional stocks related to established crypto companies or with indirect crypto exposure offer more stability than direct investment in most cryptocurrencies."
+          </h2>
+        );
+
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="landing-page">
-      {/* 🧭 Navbar */}
-      <nav className="navbar">
-        {/* ✅ Logo Section */}
-        <div className="logo">
-          <span className="logo-icon">SCS</span>
-          <span className="logo-text">SafeCryptoStocks</span>
+    <div className="landing-dashboard">
+      {/* 🔝 Top Navbar */}
+      <div className="topbar">
+        <div className="top-left">
+          <h2 className="brand-top">SafeCryptoStocks</h2>
         </div>
-
-        {/* ✅ Center Nav Links */}
-        <ul className="nav-links">
-          <li><button className="nav-btn">Buy Crypto</button></li>
-          <li><button className="nav-btn">Dashboard</button></li>
-          <li><button className="nav-btn">Exchange</button></li>
-          <li><button className="nav-btn">More ▾</button></li>
-        </ul>
-
-        {/* ✅ Right Section */}
-        <div className="nav-right">
-          <div className="nav-icons">
-            <div className="icon-item">
-              <FaChartPie className="icon" /> <span>Portfolio</span>
-            </div>
-            <div className="icon-item">
-              <FaRegStar className="icon" /> <span>Watchlist</span>
-            </div>
-          </div>
-
-          {/* ✅ Search Box */}
-          <div className="search-box">
+        <div className="top-right">
+          <div className="search-area">
+            <input type="text" placeholder="Search by symbol..." />
             <FaSearch className="search-icon" />
-            <input type="text" placeholder="Search" />
           </div>
-
-          {/* ✅ Auth Buttons */}
-          <div className="nav-auth">
+          <div className="topbar-actions">
+            <button className="settings-btn">
+              <FaCog /> Settings
+            </button>
             <Link to="/auth?mode=login">
-              <button className="login-btn">Log In</button>
+              <button className="logout-btn">
+                <FaLock /> Login
+              </button>
             </Link>
             <Link to="/auth?mode=signup">
               <button className="signup-btn">Sign Up</button>
             </Link>
           </div>
         </div>
-      </nav>
+      </div>
 
-      {/* 🏠 Hero Section */}
-      <div className="hero-section">
-        <div className="hero-left">
-          <h1>
-            <span>294,423</span>
-            <br /> USERS TRUST US
-          </h1>
-
-          <div className="badges">
-            <div className="badge">
-              <span className="badge-title">No.1</span>
-              <p>Customer Assets</p>
-            </div>
-            <div className="badge">
-              <span className="badge-title">No.1</span>
-              <p>Trading Volume</p>
-            </div>
-          </div>
-
-          <div className="cta-section">
-            <button className="bonus-btn">🎁 Up to $100 Bonus Only Today</button>
-            <Link to="/auth?mode=signup">
-              <button className="signup-btn main">Sign Up</button>
-            </Link>
-          </div>
-
-          <div className="icons">
-            <button className="icon-btn">G</button>
-            <button className="icon-btn"></button>
-            <button className="icon-btn">QR</button>
-          </div>
-        </div>
-
-        <div className="hero-right">
-          {/* ✅ Live Popular Coins Section */}
-          <div className="card">
-            <h3>Popular</h3>
-            {loading ? (
-              <p>Loading data...</p>
-            ) : (
-              <ul>
-                {coins.map((coin) => (
-                  <li key={coin.id}>
-                    <span>
-                      <img
-                        src={coin.image}
-                        alt={coin.name}
-                        width="20"
-                        height="20"
-                        style={{ marginRight: "8px", verticalAlign: "middle" }}
-                      />
-                      {coin.symbol.toUpperCase()} {coin.name}
-                    </span>
-                    <span>${coin.current_price.toLocaleString()}</span>
-                    <span
-                      className={
-                        coin.price_change_percentage_24h >= 0 ? "green" : "red"
-                      }
-                    >
-                      {coin.price_change_percentage_24h >= 0 ? "+" : ""}
-                      {coin.price_change_percentage_24h.toFixed(2)}%
-                    </span>
-                  </li>
-                ))}
-              </ul>
+      {/* 🧭 Sidebar + Main Content */}
+      <div className="main-layout">
+        <aside className="sidebar">
+          <ul>
+            {["Overview", "Markets", "Portfolio", "Trade", "Wallet", "History"].map(
+              (item) => (
+                <li
+                  key={item}
+                  className={activeTab === item ? "active" : ""}
+                  onClick={() => setActiveTab(item)}
+                >
+                  {item}
+                </li>
+              )
             )}
-          </div>
+          </ul>
+        </aside>
 
-          {/* ✅ News Section */}
-          <div className="card news">
-            <h3>News</h3>
-            <ul>
-              <li>Crypto Industry Surpasses $10B in Third Quarter</li>
-              <li>BNB Surpasses $1,150 USDT with 7.2% Increase</li>
-              <li>ETH Acquires Stake in SEC Broker Liquidity.io</li>
-            </ul>
-          </div>
-        </div>
+        {/* 🧩 Dynamic Content Area */}
+        <main className="main-content">{renderContent()}</main>
       </div>
     </div>
   );

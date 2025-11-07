@@ -2,46 +2,48 @@ import React, { useEffect, useState } from "react";
 import "./Dashboard.css";
 import "./Setting.css";
 
-
 export default function Settings({ onClose }) {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    mobile: "",      // ✅ matches what we save in localStorage
+    mobile: "",
     address: "",
     bankName: "",
     accountNumber: "",
     ifscCode: "",
   });
 
-  // ✅ Load from localStorage when page opens
+  const [selectedCurrency, setSelectedCurrency] = useState("USD");
+
+  // ✅ Load saved data
   useEffect(() => {
     const savedUser = JSON.parse(localStorage.getItem("userDetails"));
-    if (savedUser) {
-      setFormData(savedUser);
-    }
+    if (savedUser) setFormData(savedUser);
+
+    const savedCurrency = localStorage.getItem("currency") || "USD";
+    setSelectedCurrency(savedCurrency);
   }, []);
 
-  // ✅ Update any input field dynamically
+  // ✅ Handle field change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // ✅ Save back to localStorage
+  // ✅ Save both profile + currency
   const handleSave = () => {
     localStorage.setItem("userDetails", JSON.stringify(formData));
-    alert("✅ Your details have been updated successfully!");
+    localStorage.setItem("currency", selectedCurrency);
+    alert(`✅ Settings saved! Currency set to ${selectedCurrency}.`);
   };
 
   return (
     <div className="settings-container-center">
       <h2>⚙ Settings</h2>
-      <p>Manage and edit your personal and bank details.</p>
+      <p>Manage and edit your personal, banking and display preferences.</p>
 
       <div className="general-section">
         <h3>Personal Information</h3>
-
         <label>
           Name:
           <input
@@ -68,7 +70,7 @@ export default function Settings({ onClose }) {
           Mobile Number:
           <input
             type="tel"
-            name="mobile"  // ✅ must match localStorage key
+            name="mobile"
             value={formData.mobile}
             placeholder="Enter your mobile number"
             onChange={handleChange}
@@ -122,10 +124,27 @@ export default function Settings({ onClose }) {
             onChange={handleChange}
           />
         </label>
-
-        <button onClick={handleSave}>💾 Save Changes</button>
       </div>
 
+      {/* ✅ Currency Selector */}
+      <div className="general-section">
+        <h3>Currency Preference</h3>
+        <p>Select your preferred currency to display dashboard values.</p>
+        <select
+          value={selectedCurrency}
+          onChange={(e) => setSelectedCurrency(e.target.value)}
+          className="currency-select"
+        >
+          <option value="USD">🇺🇸 US Dollar (USD)</option>
+          <option value="INR">🇮🇳 Indian Rupee (INR)</option>
+          <option value="AED">🇦🇪 UAE Dirham (AED)</option>
+          <option value="CNY">🇨🇳 Chinese Yuan (CNY)</option>
+          <option value="EUR">🇪🇺 Euro (EUR)</option>
+          <option value="GBP">🇬🇧 British Pound (GBP)</option>
+        </select>
+      </div>
+
+      <button onClick={handleSave}>💾 Save Changes</button>
       <button className="close-settings-btn" onClick={onClose}>
         ← Back to Dashboard
       </button>

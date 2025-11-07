@@ -6,6 +6,7 @@ import Dashboard from "./components/Dashboard";
 import MarketDetail from "./components/MarketDetail";
 
 
+
 function App() {
   return (
     <Router>
