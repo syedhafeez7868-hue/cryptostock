@@ -1,0 +1,206 @@
+.more-container {
+  padding: 30px;
+  background-color: #0f181b;
+  color: #fff;
+  font-family: "Poppins", sans-serif;
+}
+
+.more-title {
+  color: #f8c400;
+  font-size: 28px;
+  margin-bottom: 5px;
+}
+
+.more-sub {
+  color: #9fb0b3;
+  margin-bottom: 25px;
+}
+
+.more-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.more-btn {
+  background-color: #1e2a30;
+  color: #fff;
+  border: 1px solid #2a3b40;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  padding: 12px 16px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.more-btn:hover {
+  background-color: #243238;
+  transform: scale(1.02);
+}
+
+.more-btn.active {
+  background-color: #f8c400;
+  color: #0b0e11;
+  font-weight: 600;
+}
+
+.more-content {
+  background-color: #1c2a2f;
+  border: 1px solid #2a3b40;
+  border-radius: 8px;
+  padding: 20px 18px;
+  color: #d1d5db;
+  font-size: 15px;
+  line-height: 1.6;
+  animation: fadeIn 0.3s ease;
+}
+
+/* 🎓 Learning Videos */
+.video-grid {
+  margin-top: 15px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.video-box iframe {
+  width: 100%;
+  height: 180px;
+  border-radius: 10px;
+  border: none;
+}
+
+/* 💼 Demo Trading Section */
+.demo-wallet {
+  background: #122024;
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border: 1px solid #2a3b40;
+}
+
+.demo-market h4 {
+  margin-top: 10px;
+  color: #f8c400;
+}
+
+.demo-market-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.coin-card {
+  background: #101c1f;
+  border: 1px solid #263238;
+  border-radius: 10px;
+  text-align: center;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.coin-card img {
+  width: 35px;
+  height: 35px;
+}
+
+.coin-card p {
+  margin: 6px 0 2px;
+  font-size: 14px;
+  color: #fff;
+}
+
+.coin-card span {
+  color: #9fb0b3;
+  font-size: 13px;
+}
+
+.coin-card:hover {
+  transform: translateY(-3px);
+  border-color: #f8c400;
+}
+
+.coin-card.selected {
+  border: 2px solid #f8c400;
+  background: #152224;
+}
+
+.demo-trade-box {
+  background: #101c1f;
+  border: 1px solid #263238;
+  border-radius: 10px;
+  padding: 15px;
+  margin-top: 20px;
+}
+
+.demo-trade-box input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #263238;
+  margin: 10px 0;
+  background: #071213;
+  color: #fff;
+}
+
+.demo-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+.btn-demo-buy,
+.btn-demo-sell {
+  flex: 1;
+  margin: 5px;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-demo-buy {
+  background: #10b981;
+  color: #041718;
+}
+
+.btn-demo-sell {
+  background: #ef4444;
+  color: #fff;
+}
+
+.demo-history {
+  margin-top: 25px;
+}
+
+.demo-history table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.demo-history th,
+.demo-history td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: left;
+  font-size: 13px;
+}
+
+.demo-history th {
+  color: #f8c400;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

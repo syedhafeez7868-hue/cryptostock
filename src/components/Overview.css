@@ -246,3 +246,14 @@
     transform: translateX(-50%);
   }
 }
+/* expanded coin card tweaks */
+.coin-card.expanded {
+  background: rgba(28, 42, 47, 0.6);
+  border: 1px solid rgba(53, 74, 79, 0.4);
+}
+.chart-wrapper {
+  height: 220px;
+  margin-top: 12px;
+}
+.trade-btns { display:flex; gap:8px; margin-top:12px; align-items:center; }
+.trade-box input { padding:8px; border-radius:8px; background:#071213; color:#fff; border:1px solid #263238; }

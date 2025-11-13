@@ -38,11 +38,22 @@ const Auth = () => {
         password,
       });
 
-      if (res.data.token) {
-        localStorage.setItem("jwtToken", res.data.token);
-        alert("✅ Login Successful!");
-        navigate("/dashboard");
-      } else {
+     if (res.data.token) {
+  // ✅ Save token
+  localStorage.setItem("jwtToken", res.data.token);
+
+  // ✅ Decode and save user email (for cross-check)
+  const tokenParts = res.data.token.split(".");
+  if (tokenParts.length === 3) {
+    const decoded = JSON.parse(atob(tokenParts[1]));
+    const emailFromToken = decoded.sub || decoded.email || email;
+    localStorage.setItem("user", JSON.stringify({ email: emailFromToken }));
+  }
+
+  alert("✅ Login Successful!");
+  navigate("/dashboard");
+}
+ else {
         alert(res.data.message || "Invalid credentials.");
       }
     } catch (err) {

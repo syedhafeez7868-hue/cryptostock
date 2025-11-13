@@ -4,7 +4,7 @@ import axios from "axios";
 export const COINGECKO_MARKETS_URL =
   "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=true&price_change_percentage=24h";
 
-// 🔗 Backend API base URL (your Spring Boot app)
+// 🔗 Backend API base URL (Spring Boot)
 export const backend = axios.create({
   baseURL: "http://localhost:8080/api",
   headers: {

@@ -156,3 +156,20 @@
 .trade-btn:hover {
   opacity: 0.9;
 }
+/* Chart card & spacing */
+.chart-card {
+  background: linear-gradient(180deg, rgba(8,16,18,0.6), rgba(6,10,12,0.5));
+  border: 1px solid #223033;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+}
+
+/* small responsive tweaks */
+.markets-content .close-settings-btn {
+  background: transparent;
+  border: none;
+  color: #9fb0b3;
+  font-size: 14px;
+  cursor: pointer;
+}

@@ -22,31 +22,69 @@ function getUserEmail() {
   }
 }
 
+// X-axis formatting
+function formatLabel(ts, range) {
+  const d = new Date(ts);
+  if (range === "1M") return d.toLocaleDateString("en", { day: "2-digit", month: "short" });
+  if (range === "6M" || range === "1Y") return d.toLocaleDateString("en", { month: "short" });
+  return "";
+}
+
+// Group by month
+function groupByMonth(data) {
+  const map = {};
+  data.forEach((p) => {
+    const d = new Date(p.ts);
+    const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+    if (!map[key]) map[key] = [];
+    map[key].push(p.price);
+  });
+  return Object.keys(map).map((key) => {
+    const [y, m] = key.split("-").map(Number);
+    const avg = map[key].reduce((a, b) => a + b, 0) / map[key].length;
+    return { ts: new Date(y, m - 1, 1).getTime(), price: avg };
+  });
+}
+
 export default function Overview() {
   const [coins, setCoins] = useState([]);
+  const [wallet, setWallet] = useState(null);
   const [loading, setLoading] = useState(true);
+
   const [expandedCoin, setExpandedCoin] = useState(null);
+  const [expandedHistory, setExpandedHistory] = useState([]);
+
   const [tradeMode, setTradeMode] = useState(null);
   const [tradeQty, setTradeQty] = useState("");
-   const [userEmail] = useState(getUserEmail());
+
+  const [range, setRange] = useState("1M"); // ONLY 1M, 6M, 1Y
+
+  const [userEmail] = useState(getUserEmail());
   const [totalMarketCap, setTotalMarketCap] = useState(0);
   const [avg24hChange, setAvg24hChange] = useState(0);
 
   useEffect(() => {
     fetchCoins();
-    // optionally refresh prices every 30s
-    const iv = setInterval(fetchCoins, 30000);
+    fetchWallet();
+    const iv = setInterval(() => {
+      fetchCoins();
+      fetchWallet();
+    }, 30000);
     return () => clearInterval(iv);
   }, []);
 
+  // Fetch coin list
   const fetchCoins = async () => {
     setLoading(true);
     try {
       const res = await axios.get(COINGECKO_MARKETS_URL);
       setCoins(res.data || []);
-      const totalCap = (res.data || []).reduce((sum, c) => sum + (c.market_cap || 0), 0);
-      const valid = (res.data || []).filter((c) => typeof c.price_change_percentage_24h === "number");
-      const avg = valid.length ? valid.reduce((s, c) => s + c.price_change_percentage_24h, 0) / valid.length : 0;
+
+      const totalCap = res.data.reduce((s, c) => s + (c.market_cap || 0), 0);
+      const avg =
+        res.data.reduce((s, c) => s + (c.price_change_percentage_24h || 0), 0) /
+        (res.data.length || 1);
+
       setTotalMarketCap(totalCap);
       setAvg24hChange(avg);
     } catch (err) {
@@ -56,19 +94,74 @@ export default function Overview() {
     }
   };
 
-  const openExpand = (coinId) => {
-    setTradeMode(null);
-    setTradeQty("");
-    setExpandedCoin(coinId === expandedCoin ? null : coinId);
+  // Fetch wallet
+  const fetchWallet = async () => {
+    try {
+      const res = await backend.get(`/wallet/${userEmail}`);
+      setWallet(res.data);
+    } catch (e) {}
   };
 
-  // unified trade handler: save trade, update portfolio, update wallet
+  // Expand card
+  const openExpand = async (coinId) => {
+    setTradeMode(null);
+    setTradeQty("");
+    const newExp = coinId === expandedCoin ? null : coinId;
+    setExpandedCoin(newExp);
+
+    if (!newExp) return setExpandedHistory([]);
+
+    loadRangeData(newExp, range);
+  };
+
+  // Apply range
+  const changeRange = (r) => {
+    setRange(r);
+    if (expandedCoin) loadRangeData(expandedCoin, r);
+  };
+
+  // Load graph data for range
+  const loadRangeData = async (coinId, r) => {
+    try {
+      let days = 30;
+      if (r === "6M") days = 180;
+      if (r === "1Y") days = 365;
+
+      const res = await axios.get(
+        `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart`,
+        { params: { vs_currency: "usd", days, interval: "daily" } }
+      );
+
+      const raw = res.data.prices.map((p) => ({
+        ts: p[0],
+        price: p[1],
+      }));
+
+      let final = raw;
+      if (r === "6M") final = groupByMonth(raw).slice(-6);
+      if (r === "1Y") final = groupByMonth(raw).slice(-12);
+
+      setExpandedHistory(final);
+    } catch (err) {
+      console.error("Error loading history:", err);
+      setExpandedHistory([]);
+    }
+  };
+
+  // Trading
   const handleTrade = async (coin, type) => {
     if (!tradeQty || Number(tradeQty) <= 0) return alert("Enter valid quantity");
 
+    const walletRes = await backend.get(`/wallet/${userEmail}`);
+    const w = walletRes.data;
+
     const price = coin.current_price;
     const total = price * Number(tradeQty);
-    const tradePayload = {
+
+    if (type === "BUY" && w.balanceUsd < total)
+      return alert("Insufficient funds!");
+
+    const payload = {
       email: userEmail,
       coinId: coin.id,
       coinName: coin.name,
@@ -80,55 +173,47 @@ export default function Overview() {
       date: new Date().toLocaleString(),
     };
 
-    try {
-      await backend.post("/trades", tradePayload);
-      // update portfolio
-      await backend.post("/portfolio/update", tradePayload);
-      // update wallet
-      const walletRes = await backend.get(`/wallet/${userEmail}`);
-      let balance = walletRes.data.balanceUsd || 0;
-      if (type === "BUY") balance -= total;
-      else balance += total;
-      await backend.post("/wallet/update", { email: userEmail, balanceUsd: balance });
+    await backend.post("/trades", payload);
+    await backend.post("/portfolio/update", payload);
 
-      alert("✅ Trade completed successfully!");
-      // optionally notify other components (they fetch on mount / interval)
-    } catch (err) {
-      console.error("Trade error:", err);
-      alert("❌ Trade or wallet update failed");
-    } finally {
-      setTradeMode(null);
-      setTradeQty("");
-    }
+    await backend.post("/wallet/update", {
+      email: userEmail,
+      balanceUsd:
+        type === "BUY" ? w.balanceUsd - total : w.balanceUsd + total,
+    });
+
+    alert("Trade successful!");
+    setTradeMode(null);
+    setTradeQty("");
+    fetchWallet();
   };
 
   return (
     <div className="overview-content">
       <h2>📊 Market Overview</h2>
-      <p className="muted">Live data of top 20 cryptocurrencies (7-day trend)</p>
+      <p className="muted">Top 20 Cryptocurrencies</p>
 
-      {/* MOVING COIN TICKER */}
+      {/* TICKER */}
       {!loading && coins.length > 0 && (
         <div className="coin-ticker">
           <div className="ticker-track">
-            {coins.slice(0, 15).map((c) => (
-              <div key={c.id} className={`ticker-item ${c.price_change_percentage_24h >= 0 ? "green" : "red"}`}>
-                <img src={c.image} alt={c.symbol} width="22" height="22" />
-                <span className="ticker-name">{c.symbol.toUpperCase()}</span>
-                <span className="ticker-price">${c.current_price.toLocaleString()}</span>
-              </div>
-            ))}
-            {coins.slice(0, 15).map((c) => (
-              <div key={c.id + "-copy"} className={`ticker-item ${c.price_change_percentage_24h >= 0 ? "green" : "red"}`}>
-                <img src={c.image} alt={c.symbol} width="22" height="22" />
-                <span className="ticker-name">{c.symbol.toUpperCase()}</span>
-                <span className="ticker-price">${c.current_price.toLocaleString()}</span>
+            {coins.slice(0, 12).map((c) => (
+              <div
+                key={c.id}
+                className={`ticker-item ${
+                  c.price_change_percentage_24h >= 0 ? "green" : "red"
+                }`}
+              >
+                <img src={c.image} width="22" height="22" />
+                <span>{c.symbol.toUpperCase()}</span>
+                <span>${c.current_price.toLocaleString()}</span>
               </div>
             ))}
           </div>
         </div>
       )}
 
+      {/* SUMMARY CARDS */}
       <div className="cards-container">
         <div className="summary-card">
           <h3>Total Market Cap</h3>
@@ -136,71 +221,142 @@ export default function Overview() {
         </div>
         <div className="summary-card">
           <h3>24h Avg Change</h3>
-          <p style={{ color: avg24hChange >= 0 ? "#10b981" : "#ef4444" }}>{avg24hChange.toFixed(2)}%</p>
+          <p style={{ color: avg24hChange >= 0 ? "#10b981" : "#ef4444" }}>
+            {avg24hChange.toFixed(2)}%
+          </p>
         </div>
         <div className="summary-card">
           <h3>Total Coins</h3>
           <p>{coins.length}</p>
         </div>
+        <div className="summary-card">
+          <h3>Wallet Balance</h3>
+          <p>${wallet?.balanceUsd?.toFixed(2) ?? "0.00"}</p>
+        </div>
       </div>
 
+      {/* COIN LIST */}
       <div className="charts-section">
         <div className="chart-card">
-          <h3>Top 10 Coins — Click to Expand</h3>
-          {loading ? (
-            <p>Loading live data...</p>
-          ) : (
-            <div className="coin-grid">
-              {coins.slice(0, 10).map((c) => (
-                <div key={c.id} className={`coin-card ${expandedCoin === c.id ? "expanded" : ""}`}>
-                  <div className="coin-header">
-                    <div className="coin-info">
-                      <img src={c.image} alt={c.symbol} width="28" height="28" />
-                      <div>
-                        <div className="coin-name">{c.name} ({c.symbol.toUpperCase()})</div>
-                        <div className="coin-price">${c.current_price.toLocaleString()}</div>
-                      </div>
+          <h3>Top 10 Coins</h3>
+
+          <div className="coin-grid">
+            {coins.slice(0, 10).map((c) => (
+              <div
+                key={c.id}
+                className={`coin-card ${expandedCoin === c.id ? "expanded" : ""}`}
+              >
+                <div className="coin-header">
+                  <div className="coin-info">
+                    <img src={c.image} width="28" height="28" />
+                    <div>
+                      <div>{c.name}</div>
+                      <div>${c.current_price.toLocaleString()}</div>
                     </div>
-                    <button className="settings-btn" onClick={() => openExpand(c.id)}>
-                      {expandedCoin === c.id ? "Close" : "Open"}
-                    </button>
                   </div>
 
-                  {expandedCoin === c.id && (
-                    <div className="expanded-section">
-                      <div className="chart-wrapper">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={(c.sparkline_in_7d?.price || []).map((p, i) => ({ day: `Day ${i + 1}`, price: p }))}
-                            margin={{ top: 20, right: 30, left: 10, bottom: 10 }}
-                          >
-                            <CartesianGrid strokeDasharray="3 3" stroke="#2a3b40" />
-                            <XAxis dataKey="day" tick={{ fill: "#ccc", fontSize: 10 }} interval={Math.floor((c.sparkline_in_7d?.price?.length || 1) / 7)} />
-                            <YAxis tick={{ fill: "#ccc", fontSize: 11 }} domain={["auto", "auto"]} tickFormatter={(v) => `$${v.toFixed(0)}`} />
-                            <Tooltip formatter={(v) => [`$${v.toFixed(2)}`, "Price"]} contentStyle={{ backgroundColor: "#1c2a2f", border: "1px solid #2a3b40", borderRadius: "8px" }} />
-                            <Bar dataKey="price" fill={c.price_change_percentage_24h >= 0 ? "#10b981" : "#ef4444"} barSize={6} radius={[3, 3, 0, 0]} animationDuration={1000} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-
-                      <div className="trade-btns">
-                        <button className="settings-btn" onClick={() => setTradeMode("BUY")}>Buy</button>
-                        <button className="logout-btn" onClick={() => setTradeMode("SELL")}>Sell</button>
-                      </div>
-
-                      {tradeMode && (
-                        <div className="trade-box">
-                          <input type="number" placeholder="Quantity" value={tradeQty} onChange={(e) => setTradeQty(e.target.value)} />
-                          <button className="settings-btn" onClick={() => handleTrade(c, tradeMode)}>OK</button>
-                          <button className="close-settings-btn" onClick={() => setTradeMode(null)}>Cancel</button>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  <button
+                    className="settings-btn"
+                    onClick={() => openExpand(c.id)}
+                  >
+                    {expandedCoin === c.id ? "Close" : "Open"}
+                  </button>
                 </div>
-              ))}
-            </div>
-          )}
+
+                {expandedCoin === c.id && (
+                  <div className="expanded-section">
+                    {/* RANGE TABS */}
+                    <div className="range-tabs">
+                      {["1M", "6M", "1Y"].map((r) => (
+                        <button
+                          key={r}
+                          onClick={() => changeRange(r)}
+                          className={range === r ? "active-range" : ""}
+                        >
+                          {r}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* GRAPH */}
+                    <div className="chart-wrapper">
+                      <ResponsiveContainer width="100%" height={260}>
+                        <BarChart data={expandedHistory}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#2a3b40" />
+                          <XAxis
+                            dataKey="ts"
+                            tickFormatter={(v) => formatLabel(v, range)}
+                            tick={{ fill: "#ccc", fontSize: 10 }}
+                          />
+                          <YAxis
+                            tick={{ fill: "#ccc", fontSize: 11 }}
+                            tickFormatter={(v) => `$${v.toFixed(0)}`}
+                          />
+
+                          <Tooltip
+                            formatter={(v) => [`$${v.toFixed(2)}`, "Price"]}
+                            labelFormatter={(ts) =>
+                              new Date(ts).toLocaleDateString()
+                            }
+                            contentStyle={{
+                              backgroundColor: "#1c2a2f",
+                              border: "1px solid #2a3b40",
+                            }}
+                          />
+
+                          <Bar
+                            dataKey="price"
+                            fill={c.price_change_percentage_24h >= 0 ? "#10b981" : "#ef4444"}
+                            barSize={8}
+                            radius={[3, 3, 0, 0]}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    {/* BUY & SELL */}
+                    <div className="trade-btns">
+                      <button
+                        className="settings-btn"
+                        onClick={() => setTradeMode("BUY")}
+                      >
+                        Buy
+                      </button>
+                      <button
+                        className="logout-btn"
+                        onClick={() => setTradeMode("SELL")}
+                      >
+                        Sell
+                      </button>
+                    </div>
+
+                    {tradeMode && (
+                      <div className="trade-box">
+                        <input
+                          type="number"
+                          value={tradeQty}
+                          placeholder="Quantity"
+                          onChange={(e) => setTradeQty(e.target.value)}
+                        />
+                        <button
+                          className="settings-btn"
+                          onClick={() => handleTrade(c, tradeMode)}
+                        >
+                          OK
+                        </button>
+                        <button
+                          className="close-settings-btn"
+                          onClick={() => setTradeMode(null)}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

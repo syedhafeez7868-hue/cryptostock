@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import "./Dashboard.css";
 
-
+import Watchlist from "./Watchlist";
+import Home from "./Home";
 import Overview from "./Overview";
 import Markets from "./Markets";
 import Portfolio from "./Portfolio";
@@ -12,8 +13,9 @@ import Wallet from "./Wallet";
 import Settings from "./Settings";
 import More from "./More";
 
+
 export default function Dashboard() {
-  const [selectedTab, setSelectedTab] = useState("Overview");
+  const [selectedTab, setSelectedTab] = useState("Home");
   const [userEmail, setUserEmail] = useState("");
   const [userName, setUserName] = useState("");
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -24,20 +26,26 @@ export default function Dashboard() {
   const dropdownRef = useRef(null);
  
 
-  // ✅ Load saved theme
+  // ✅ Theme persistence
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
     if (savedTheme) setTheme(savedTheme);
     document.body.setAttribute("data-theme", savedTheme || "dark");
   }, []);
 
-  // ✅ Validate JWT and extract user info
+  // ✅ JWT decoding for user info
   useEffect(() => {
     const token = localStorage.getItem("jwtToken");
     if (!token) {
       navigate("/auth?mode=login");
       return;
     }
+    const storedUser = JSON.parse(localStorage.getItem("user"));
+    if (!storedUser || !storedUser.email) {
+      localStorage.removeItem("jwtToken");
+      navigate("/auth?mode=login");
+     return;
+     }
     try {
       const decoded = jwtDecode(token);
       const email = decoded?.sub || decoded?.email || "";
@@ -52,18 +60,15 @@ export default function Dashboard() {
   }, [navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem("jwtToken");
-    navigate("/");
+  localStorage.removeItem("jwtToken");
+  localStorage.removeItem("user");
+  localStorage.removeItem("userDetails");
+  sessionStorage.clear();
+
+  // Force reload to clear React state
+  window.location.href = "/auth?mode=login";
   };
 
-  const handleSettingsClick = () => {
-    setIsSettingsOpen(true);
-    setIsDropdownOpen(false);
-  };
-
-  const handleCloseSettings = () => {
-    setIsSettingsOpen(false);
-  };
 
   // ✅ Theme toggle
   const toggleTheme = () => {
@@ -73,7 +78,7 @@ export default function Dashboard() {
     document.body.setAttribute("data-theme", newTheme);
   };
 
-  // ✅ Close dropdown when clicked outside
+  // ✅ Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -84,33 +89,36 @@ export default function Dashboard() {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
+  // ✅ Page rendering logic
   const renderContent = () => {
-    if (isSettingsOpen) {
+    if (isSettingsOpen)
       return (
         <Settings
           userName={userName}
           userEmail={userEmail}
-          onClose={handleCloseSettings}
+          onClose={() => setIsSettingsOpen(false)}
         />
       );
-    }
 
     switch (selectedTab) {
+      case "Home":
+        return <Home/>;
       case "Overview":
         return <Overview />;
       case "Markets":
         return <Markets />;
       case "Portfolio":
         return <Portfolio />;
-    
       case "Wallet":
         return <Wallet />;
       case "History":
         return <History />;
       case "More":
-        return <div className="more-page"><h2>Loading More...</h2></div>;
+        return <More />;
+      case "Watchlist":
+        return <Watchlist />;
       default:
-        return <Overview />;
+        return <Home/>;
     }
   };
 
@@ -127,19 +135,13 @@ export default function Dashboard() {
             onClick={() => setSidebarOpen(!sidebarOpen)}
             title={sidebarOpen ? "Collapse" : "Expand"}
           >
-            {sidebarOpen ? "−" : "☰"}
+            ☰
           </button>
         </div>
 
         <ul className="sidebar-menu">
-          {[
-            "Overview",
-            "Markets",
-            "Portfolio",
-            "Wallet",
-            "History",
-            "More",
-          ].map((item) => (
+         {["Home", "Overview", "Markets", "Portfolio", "Wallet", "History", "More"].map((item) => (
+
             <li
               key={item}
               className={selectedTab === item ? "active" : ""}
@@ -154,41 +156,58 @@ export default function Dashboard() {
         </ul>
       </aside>
 
+      
 
-      {/* Main Section */}
+      {/* Main section */}
       <main className="main-section">
         <header className="top-navbar">
+          {/* Search */}
           <div className="search-box">
             <input type="text" placeholder="Search by symbol..." />
             <button>🔍</button>
           </div>
 
-          {/* ✅ Profile Avatar with Dropdown */}
-          <div className="user-profile" ref={dropdownRef}>
-            <div
-              className="user-info"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          {/* Watchlist + Notifications + Profile */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <button
+              className="icon-btn"
+              title="Watchlist"
+              onClick={() => setSelectedTab("Watchlist")}
             >
-              <img
-                src="https://www.w3schools.com/howto/img_avatar.png"
-                alt="user-avatar"
-                className="user-avatar"
-              />
-              <div>
-                <h4>{userName || "User"}</h4>
-                <p>{userEmail}</p>
-              </div>
-            </div>
+              ⭐
+            </button>
 
-            {isDropdownOpen && (
-              <div className="dropdown-menu">
-                <button onClick={toggleTheme}>
-                  {theme === "dark" ? "☀ Light Theme" : "🌙 Dark Theme"}
-                </button>
-                <button onClick={handleSettingsClick}>⚙ Settings</button>
-                <button onClick={handleLogout}>🔒 Logout</button>
+            <button className="icon-btn" title="Notifications">
+              🔔
+            </button>
+
+            {/* Profile dropdown */}
+            <div className="user-profile" ref={dropdownRef}>
+              <div
+                className="user-info"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              >
+                <img
+                  src="https://www.w3schools.com/howto/img_avatar.png"
+                  alt="user-avatar"
+                  className="user-avatar"
+                />
+                <div>
+                  <h4>{userName || "User"}</h4>
+                  <p>{userEmail}</p>
+                </div>
               </div>
-            )}
+
+              {isDropdownOpen && (
+                <div className="dropdown-menu">
+                  <button onClick={toggleTheme}>
+                    {theme === "dark" ? "☀ Light Theme" : "🌙 Dark Theme"}
+                  </button>
+                  <button onClick={() => setIsSettingsOpen(true)}>⚙ Settings</button>
+                  <button onClick={handleLogout}>🔒 Logout</button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 

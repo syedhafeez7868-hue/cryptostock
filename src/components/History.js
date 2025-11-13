@@ -1,4 +1,3 @@
-// src/components/History.js
 import React, { useEffect, useState } from "react";
 import { backend } from "./api";
 import "./History.css";
@@ -6,9 +5,9 @@ import "./History.css";
 function getUserEmail() {
   try {
     const u = JSON.parse(localStorage.getItem("user"));
-    return u?.email || "guest@example.com";
+    return u?.email || "";
   } catch {
-    return "guest@example.com";
+    return "";
   }
 }
 
@@ -19,15 +18,23 @@ export default function History() {
   const userEmail = getUserEmail();
 
   useEffect(() => {
+    if (!userEmail) {
+      setTrades([]);
+      setLoading(false);
+      return;
+    }
     fetchTrades();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userEmail]);
 
   const fetchTrades = async () => {
     try {
       setLoading(true);
       const res = await backend.get(`/trades/${userEmail}`);
-      setTrades(res.data || []);
+      // Only include BUY/SELL trades, not wallet deposit/withdraw
+      const tradeOnly = (res.data || []).filter(
+        (t) => t.type === "BUY" || t.type === "SELL"
+      );
+      setTrades(tradeOnly);
     } catch (err) {
       console.error("Error fetching history:", err);
     } finally {
@@ -35,7 +42,8 @@ export default function History() {
     }
   };
 
-  const filteredTrades = filter === "All" ? trades : trades.filter((t) => t.status === filter);
+  const filteredTrades =
+    filter === "All" ? trades : trades.filter((t) => t.status === filter);
 
   return (
     <div className="history-content">
@@ -52,12 +60,28 @@ export default function History() {
         <button onClick={() => setFilter("All")}>Reset</button>
       </div>
 
-      {loading ? (<p>Loading history...</p>) :
-        (<div className="history-table">
+      {loading ? (
+        <p>Loading history...</p>
+      ) : (
+        <div className="history-table">
           <table>
-            <thead><tr><th>Date</th><th>Coin</th><th>Qty</th><th>Type</th><th>Price</th><th>Total</th><th>Status</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Coin</th>
+                <th>Qty</th>
+                <th>Type</th>
+                <th>Price</th>
+                <th>Total</th>
+                <th>Status</th>
+              </tr>
+            </thead>
             <tbody>
-              {filteredTrades.length === 0 ? (<tr><td colSpan="7">No trades found.</td></tr>) :
+              {filteredTrades.length === 0 ? (
+                <tr>
+                  <td colSpan="7">No trades found.</td>
+                </tr>
+              ) : (
                 filteredTrades.map((t) => (
                   <tr key={t.id}>
                     <td>{t.date}</td>
@@ -66,14 +90,26 @@ export default function History() {
                     <td>{t.type}</td>
                     <td>${(t.price || 0).toFixed(2)}</td>
                     <td>${(t.total || 0).toFixed(2)}</td>
-                    <td style={{ color: t.status === "Completed" ? "#10b981" : t.status === "Pending" ? "#f8c400" : "#ef4444", fontWeight: "bold" }}>{t.status}</td>
+                    <td
+                      style={{
+                        color:
+                          t.status === "Completed"
+                            ? "#10b981"
+                            : t.status === "Pending"
+                            ? "#f8c400"
+                            : "#ef4444",
+                        fontWeight: "bold"
+                      }}
+                    >
+                      {t.status}
+                    </td>
                   </tr>
                 ))
-              }
+              )}
             </tbody>
           </table>
-        </div>)
-      }
+        </div>
+      )}
     </div>
   );
 }

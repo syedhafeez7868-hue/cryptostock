@@ -1,116 +1,352 @@
 // src/components/MarketDetail.js
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import { LineChart, Line, ResponsiveContainer } from "recharts";
+import {
+  LineChart,
+  Line,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+} from "recharts";
 import { backend } from "./api";
 import "./Markets.css";
+import { getUserEmail } from "./utils";
 
-function getUserEmail() {
-  try {
-    const u = JSON.parse(localStorage.getItem("user"));
-    return u?.email || "guest@example.com";
-  } catch {
-    return "guest@example.com";
-  }
+// -------------------- X-Axis LABEL FORMATTER --------------------
+function formatLabel(ts, mode) {
+  const d = new Date(ts);
+  if (mode === "1M")
+    return d.toLocaleDateString("en-US", { day: "2-digit", month: "short" });
+  if (mode === "6M") return d.toLocaleDateString("en-US", { month: "short" });
+  if (mode === "1Y") return d.toLocaleDateString("en-US", { month: "short" });
+  return "";
+}
+
+// -------------------- GROUP BY MONTH --------------------
+function groupByMonth(data) {
+  const map = {};
+  data.forEach((p) => {
+    const d = new Date(p.ts);
+    const k = `${d.getFullYear()}-${d.getMonth() + 1}`;
+    if (!map[k]) map[k] = [];
+    map[k].push(p.price);
+  });
+
+  return Object.keys(map).map((k) => {
+    const [y, m] = k.split("-").map(Number);
+    const avg = map[k].reduce((a, b) => a + b, 0) / map[k].length;
+    return { ts: new Date(y, m - 1, 1).getTime(), price: avg };
+  });
 }
 
 export default function MarketDetail() {
   const { id } = useParams();
-  const [coin, setCoin] = useState(null);
-  const [qty, setQty] = useState("");
-  const [mode, setMode] = useState(null);
   const userEmail = getUserEmail();
 
+  const [coin, setCoin] = useState(null);
+  const [wallet, setWallet] = useState(null);
+  const [historyData, setHistoryData] = useState([]);
+  const [animatedPoints, setAnimatedPoints] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // trading UI state
+  const [qty, setQty] = useState("");
+  const [mode, setMode] = useState(null); // "BUY" or "SELL"
+  const [tradeLoading, setTradeLoading] = useState(false);
+
+  const pollingRef = useRef(null);
+
+  // FINAL RANGES
+  const [range, setRange] = useState("1M"); // ONLY 1M, 6M, 1Y
+
+  // -------------------- INITIAL LOAD --------------------
   useEffect(() => {
     fetchCoin();
-  }, [id]);
+    fetchWallet();
+    fetchRange(range);
+    startPolling();
+    return () => stopPolling();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, range]);
 
+  // -------------------- FETCH COIN --------------------
   const fetchCoin = async () => {
     try {
-      const res = await axios.get(`https://api.coingecko.com/api/v3/coins/${id}?localization=false&sparkline=true`);
+      const res = await axios.get(
+        `https://api.coingecko.com/api/v3/coins/${id}?localization=false`
+      );
       setCoin(res.data);
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.log("fetchCoin error:", e);
     }
   };
 
-  const doTrade = async (type) => {
-    if (!qty || Number(qty) <= 0) return alert("enter qty");
-    const price = coin?.market_data?.current_price?.usd;
-    const total = price * Number(qty);
+  // -------------------- FETCH WALLET --------------------
+  const fetchWallet = async () => {
+    try {
+      const res = await backend.get(`/wallet/${userEmail}`);
+      setWallet(res.data);
+    } catch (e) {
+      console.log("fetchWallet error:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const tradePayload = {
-      email: userEmail,
-      coinId: coin.id,
-      coinName: coin.name,
-      type,
-      quantity: Number(qty),
-      price,
-      total,
-      status: "Completed",
-      date: new Date().toLocaleString(),
-    };
+  // -------------------- FETCH RANGE GRAPH --------------------
+  const fetchRange = async (r) => {
+    setHistoryData([]);
+
+    let days = 30;
+    if (r === "6M") days = 180;
+    if (r === "1Y") days = 365;
 
     try {
-      await backend.post("/trades", tradePayload);
-      await backend.post("/portfolio/update", tradePayload);
+      const res = await axios.get(
+        `https://api.coingecko.com/api/v3/coins/${id}/market_chart`,
+        { params: { vs_currency: "usd", days, interval: "daily" } }
+      );
 
-      const walletRes = await backend.get(`/wallet/${userEmail}`);
-      let balance = walletRes.data.balanceUsd || 0;
-      if (type === "BUY") balance -= total; else balance += total;
-      await backend.post("/wallet/update", { email: userEmail, balanceUsd: balance });
+      const raw = (res.data.prices || []).map((p) => ({
+        ts: p[0],
+        price: p[1],
+      }));
 
-      alert("✅ Trade saved");
-      setQty("");
-      setMode(null);
-    } catch (err) {
-      console.error(err);
-      alert("trade failed");
+      let final = raw;
+
+      if (r === "6M") final = groupByMonth(raw).slice(-6);
+      if (r === "1Y") final = groupByMonth(raw).slice(-12);
+
+      setHistoryData(final);
+      setAnimatedPoints([]);
+    } catch (e) {
+      console.log("fetchRange error:", e);
     }
   };
 
+  // -------------------- LIVE POLLING --------------------
+  const startPolling = () => {
+    stopPolling();
+    pollingRef.current = setInterval(pollLatestPrice, 6000);
+    // initial poll
+    pollLatestPrice();
+  };
+
+  const stopPolling = () => {
+    if (pollingRef.current) clearInterval(pollingRef.current);
+  };
+
+  const pollLatestPrice = async () => {
+    try {
+      const res = await axios.get(
+        `https://api.coingecko.com/api/v3/coins/markets`,
+        { params: { vs_currency: "usd", ids: id } }
+      );
+      const price = res.data[0]?.current_price;
+      if (price !== undefined) {
+        setAnimatedPoints((prev) => [...prev.slice(-20), { ts: Date.now(), price }]);
+      }
+    } catch (e) {
+      console.log("pollLatestPrice error:", e);
+    }
+  };
+
+  // -------------------- TRADE (BUY / SELL) --------------------
+  const confirmTrade = async (type) => {
+    if (!qty || Number(qty) <= 0) {
+      return alert("Enter a valid quantity");
+    }
+    if (!coin) return alert("Coin not loaded");
+
+    const price =
+      coin?.market_data?.current_price?.usd ||
+      historyData[historyData.length - 1]?.price ||
+      animatedPoints[animatedPoints.length - 1]?.price ||
+      0;
+
+    const quantity = Number(qty);
+    const total = price * quantity;
+
+    // BUY: check wallet balance
+    if (type === "BUY") {
+      const balance = Number(wallet?.balanceUsd || 0);
+      if (balance < total) {
+        return alert("Insufficient wallet balance for this buy");
+      }
+    }
+
+    // SELL: optionally ensure user has holdings in portfolio (best-effort)
+    // NOTE: your backend enforces portfolio correctness; this is a UI-level check if portfolio endpoint available.
+    try {
+      setTradeLoading(true);
+
+      const payload = {
+        email: userEmail,
+        coinId: coin.id,
+        coinName: coin.name,
+        symbol: coin.symbol,
+        type,
+        quantity,
+        price,
+        total,
+        status: "Completed",
+        date: new Date().toLocaleString(),
+      };
+
+      // 1) create trade record
+      await backend.post("/trades", payload);
+
+      // 2) update portfolio (your backend endpoint used in other places)
+      await backend.post("/portfolio/update", payload);
+
+      // 3) update wallet balance
+      const currentWalletRes = await backend.get(`/wallet/${userEmail}`);
+      const currentWallet = currentWalletRes.data || { balanceUsd: 0 };
+      let newBalance =
+        type === "BUY"
+          ? Number(currentWallet.balanceUsd || 0) - total
+          : Number(currentWallet.balanceUsd || 0) + total;
+      if (newBalance < 0) newBalance = 0;
+
+      await backend.post("/wallet/update", {
+        email: userEmail,
+        balanceUsd: newBalance,
+      });
+
+      // 4) success feedback and refresh wallet & chart data
+      alert(`✅ ${type} successful: ${quantity} ${coin.symbol?.toUpperCase()} @ $${price.toFixed(4)} (total $${total.toFixed(2)})`);
+      setQty("");
+      setMode(null);
+      fetchWallet();
+    } catch (err) {
+      console.error("confirmTrade error:", err?.response?.data || err);
+      alert("Trade failed. See console for details.");
+    } finally {
+      setTradeLoading(false);
+    }
+  };
+
+  // -------------------- RENDER --------------------
   if (!coin) return <div className="markets-content">Loading...</div>;
 
-  const prices = (coin.market_data?.sparkline_7d?.price || []).map((p, i) => ({ i, price: p }));
+  const chartData = [...historyData, ...animatedPoints];
 
   return (
     <div className="markets-content">
-      <button onClick={() => window.history.back()} className="close-settings-btn">← Back</button>
+      <button
+        onClick={() => window.history.back()}
+        className="close-settings-btn"
+      >
+        ← Back
+      </button>
 
-      <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-        <img src={coin.image?.large} alt={coin.name} width="60" height="60" />
-        <div>
-          <h2 style={{ color: "#f8c400" }}>{coin.name} ({coin.symbol?.toUpperCase()})</h2>
-          <p style={{ color: "#9fb0b3" }}>{coin.market_data?.current_price?.usd ? `$${coin.market_data.current_price.usd.toLocaleString()}` : ""}</p>
-        </div>
+      <h2 style={{ color: "#f8c400" }}>
+        {coin.name} ({coin.symbol.toUpperCase()})
+      </h2>
+
+      {/* -------- RANGE BUTTONS (ONLY 1M, 6M, 1Y) -------- */}
+      <div className="range-tabs">
+        {["1M", "6M", "1Y"].map((r) => (
+          <button
+            key={r}
+            onClick={() => setRange(r)}
+            className={range === r ? "active-range" : ""}
+          >
+            {r}
+          </button>
+        ))}
       </div>
 
-      <div className="chart-card" style={{ marginTop: 20 }}>
-        <h3>7-Day Price</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={prices}>
-            <Line type="monotone" dataKey="price" stroke={coin.market_data?.price_change_percentage_24h >= 0 ? "#10b981" : "#ef4444"} dot={false} strokeWidth={2} />
+      {/* ------------------ CHART ------------------ */}
+      <div className="chart-card">
+        <h3>{range} Chart</h3>
+
+        <ResponsiveContainer width="100%" height={320}>
+          <LineChart data={chartData}>
+            <XAxis
+              dataKey="ts"
+              tickFormatter={(v) => formatLabel(v, range)}
+              tick={{ fill: "#d5e1e3" }}
+            />
+
+            <YAxis
+              tick={{ fill: "#d5e1e3" }}
+              tickFormatter={(v) => `$${v.toLocaleString()}`}
+            />
+
+            <Tooltip
+              formatter={(v) => `$${Number(v).toLocaleString()}`}
+              labelFormatter={(ts) => new Date(ts).toLocaleString()}
+            />
+
+            <Line
+              type="monotone"
+              dataKey="price"
+              stroke="#10b981"
+              strokeWidth={2}
+              dot={false}
+            />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
-      <div style={{ marginTop: 12 }}>
-        <button className="settings-btn" onClick={() => setMode('BUY')}>Buy</button>
-        <button className="logout-btn" onClick={() => setMode('SELL')}>Sell</button>
-      </div>
+      {/* --------- BUY / SELL BUTTONS & INPUT --------- */}
+      <div style={{ marginTop: 12, display: "flex", gap: 12, alignItems: "center" }}>
+        <button
+          className="settings-btn"
+          onClick={() => {
+            setMode("BUY");
+            setQty("");
+          }}
+          style={{ minWidth: 90 }}
+        >
+          Buy
+        </button>
 
-      {mode && (
-        <div style={{ marginTop: 12 }}>
-          <input value={qty} onChange={(e) => setQty(e.target.value)} placeholder="Quantity" />
-          <button onClick={() => doTrade(mode)} className="settings-btn">Confirm {mode}</button>
-          <button onClick={() => { setMode(null); setQty(''); }} className="close-settings-btn">Cancel</button>
-        </div>
-      )}
+        <button
+          className="logout-btn"
+          onClick={() => {
+            setMode("SELL");
+            setQty("");
+          }}
+          style={{ minWidth: 90 }}
+        >
+          Sell
+        </button>
 
-      <div className="transactions-card" style={{ marginTop: 20 }}>
-        <h3>About</h3>
-        <div dangerouslySetInnerHTML={{ __html: coin.description?.en?.substring(0, 500) || "No description" }} />
+        {/* show inline quantity input when mode is active */}
+        {mode && (
+          <div style={{ display: "flex", gap: 8, alignItems: "center", marginLeft: 8 }}>
+            <div style={{ fontWeight: 600 }}>{mode}</div>
+            <input
+              type="number"
+              min="0"
+              step="any"
+              value={qty}
+              onChange={(e) => setQty(e.target.value)}
+              placeholder="Quantity"
+              style={{ padding: "8px 10px", borderRadius: 6, background: "#0f1b1d", color: "#fff", border: "1px solid #263238", width: 140 }}
+            />
+            <button
+              className="settings-btn"
+              onClick={() => confirmTrade(mode)}
+              disabled={tradeLoading}
+            >
+              {tradeLoading ? "Processing..." : "Confirm"}
+            </button>
+            <button
+              className="close-settings-btn"
+              onClick={() => {
+                setMode(null);
+                setQty("");
+              }}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

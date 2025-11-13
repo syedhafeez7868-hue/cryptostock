@@ -1,0 +1,100 @@
+/* src/components/Watchlist.css */
+
+.watchlist-page {
+  padding: 30px;
+  color: #fff;
+  background-color: #0f181b;
+  font-family: "Poppins", sans-serif;
+  min-height: 100vh;
+}
+
+.watchlist-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.watchlist-title {
+  color: #f8c400;
+  font-size: 28px;
+}
+
+.clear-btn {
+  background-color: #ef4444;
+  border: none;
+  color: #fff;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.clear-btn:hover {
+  background-color: #dc2626;
+  transform: scale(1.05);
+}
+
+.watchlist-empty {
+  color: #9fb0b3;
+  text-align: center;
+  margin-top: 30px;
+  font-size: 15px;
+}
+
+.watchlist-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.watchlist-card {
+  background-color: #1c2a2f;
+  border: 1px solid #2a3b40;
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.watchlist-card:hover {
+  transform: scale(1.03);
+  background-color: #24343a;
+}
+
+.watchlist-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.watchlist-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background-color: #0b0e11;
+}
+
+.symbol {
+  font-size: 13px;
+  color: #9fb0b3;
+}
+
+.remove-btn {
+  background-color: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.remove-btn:hover {
+  background-color: #dc2626;
+}
